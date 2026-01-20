@@ -14,14 +14,17 @@ import {
   getLocalPremium,
   getPremiumProduct,
   buyPremium,
-  restorePremium
+  restorePremium,
+  DEBUG_clearPremium,
+  IS_DEV_MODE
 } from "./src/monetization/premium";
 
 export default function App() {
   const { phaseLabel, remainingSeconds, isRunning, circleScale, start, pause, reset } =
     useBreathing();
 
-  const [isPremium, setIsPremium] = useState(false);
+  // Começa como null para saber que ainda está carregando
+  const [isPremium, setIsPremium] = useState<boolean | null>(null);
   const [priceLabel, setPriceLabel] = useState("R$ 4,99");
 
   useEffect(() => {
@@ -34,8 +37,8 @@ export default function App() {
       try {
         await initIAP();
         const product = await getPremiumProduct();
-        if (product?.displayPrice && mounted) {
-          setPriceLabel(product.displayPrice);
+        if (product && "displayPrice" in product && mounted) {
+          setPriceLabel((product as any).displayPrice);
         }
       } catch (e) {
         // Se falhar, mantém preço default e segue
@@ -103,17 +106,35 @@ export default function App() {
         <View style={{ height: 18 }} />
 
         <PremiumCard
-          isPremium={isPremium}
+          isPremium={isPremium ?? false}
           priceLabel={priceLabel}
           onBuy={onBuy}
           onRestore={onRestore}
         />
 
-        {/* Ads: só para NÃO premium, e só na tela inicial */}
-        <AdBanner show={!isPremium} />
+        {/* Ads: só para NÃO premium */}
+        <AdBanner show={isPremium === false} />
 
         <View style={{ height: 10 }} />
         <Text style={styles.footer}>Sem login. Sem coleta de dados.</Text>
+
+        {/* DEBUG: Só aparece em desenvolvimento (Expo Go) */}
+        {IS_DEV_MODE && (
+          <Text
+            style={styles.debugBtn}
+            onPress={async () => {
+              if (isPremium) {
+                await DEBUG_clearPremium();
+                setIsPremium(false);
+                Alert.alert("Debug", "Premium removido!");
+              } else {
+                Alert.alert("Debug", "Você ainda não é premium. Clique em Apoiar primeiro.");
+              }
+            }}
+          >
+            [DEV] {isPremium ? "Resetar Premium ✓" : "Premium inativo"}
+          </Text>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -121,6 +142,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#0B1220" },
+  debugBtn: { color: "#666", fontSize: 11, marginTop: 20 },
   container: {
     flex: 1,
     paddingHorizontal: 22,

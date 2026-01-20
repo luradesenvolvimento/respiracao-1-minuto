@@ -1,17 +1,18 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
-import { BannerAd, BannerAdSize } from "react-native-google-mobile-ads";
+import { View, StyleSheet, Text } from "react-native";
 
-// Use TEST ID durante desenvolvimento.
-// Troque pelo seu Ad Unit real no build de produção.
-const TEST_BANNER_ID = "ca-app-pub-3940256099942544/6300978111";
+// Anúncios desabilitados para Expo Go - requer build nativo
+const isAdsAvailable = false;
 
 export function AdBanner({ show }: { show: boolean }) {
   if (!show) return null;
 
+  // Anúncios não estão disponíveis no Expo Go
   return (
-    <View style={styles.wrap}>
-      <BannerAd unitId={TEST_BANNER_ID} size={BannerAdSize.BANNER} />
+    <View style={[styles.wrap, styles.placeholder]}>
+      <Text style={styles.placeholderText}>
+        [Anúncio - requer build nativo]
+      </Text>
     </View>
   );
 }
@@ -21,5 +22,15 @@ const styles = StyleSheet.create({
     marginTop: 14,
     alignItems: "center",
     justifyContent: "center"
+  },
+  placeholder: {
+    backgroundColor: "#333",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 6
+  },
+  placeholderText: {
+    color: "#888",
+    fontSize: 12
   }
 });

@@ -14,15 +14,9 @@ export function PremiumCard({
   onBuy: () => void;
   onRestore: () => void;
 }) {
+  // Premium ativo = não mostra nada
   if (isPremium) {
-    return (
-      <View style={styles.card}>
-        <Text style={styles.title}>Premium ativo ✨</Text>
-        <Text style={styles.body}>Obrigada por apoiar. Sem anúncios pra você.</Text>
-        <View style={{ height: 10 }} />
-        <SecondaryButton label="Restaurar compra" onPress={onRestore} />
-      </View>
-    );
+    return null;
   }
 
   return (

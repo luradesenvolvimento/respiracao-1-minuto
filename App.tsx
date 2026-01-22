@@ -8,7 +8,7 @@ import { PrimaryButton } from "./src/ui/PrimaryButton";
 import { SecondaryButton } from "./src/ui/SecondaryButton";
 
 import { AdBanner } from "./src/monetization/AdBanner";
-import { PremiumCard } from "./src/monetization/PremiumCard";
+import { PremiumCard } from "./src/premium/PremiumCard";
 import {
   initIAP,
   endIAP,
@@ -18,7 +18,7 @@ import {
   restorePremium,
   DEBUG_clearPremium,
   IS_DEV_MODE
-} from "./src/monetization/premium";
+} from "./src/premium/premium";
 
 export default function App() {
   const { phaseLabel, remainingSeconds, isRunning, circleScale, start, pause, reset, phase } =

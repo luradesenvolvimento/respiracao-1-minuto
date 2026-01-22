@@ -74,24 +74,25 @@ export function useBreathing() {
 
       setPhaseRemaining(prevPR => {
         const nextPR = prevPR - 1;
-
         if (nextPR <= 0) {
-          // troca fase
           setPhaseIndex(prevPI => {
             const newIndex = nextPhaseIndex(prevPI);
-            // inicia nova fase com tempo cheio
             const newPhase = PHASES[newIndex].phase;
             animateForPhase(newPhase);
             return newIndex;
           });
-
-          return PHASES[nextPhaseIndex(phaseIndex)].seconds; // valor "transitório"
+          // O tempo será sincronizado pelo useEffect abaixo
+          return 0;
         }
-
         return nextPR;
       });
     }, 1000);
   }
+  
+  // Sincroniza o tempo da fase sempre que o índice muda
+  useEffect(() => {
+    setPhaseRemaining(PHASES[phaseIndex].seconds);
+  }, [phaseIndex]);
 
   // quando termina, para tudo e marca DONE
   useEffect(() => {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { SafeAreaView, StatusBar, StyleSheet, Text, View, Alert } from "react-native";
 import { useBreathing } from "./src/breathing/useBreathing";
+import { phaseDescription, TOTAL_SECONDS, PHASES, phaseLabel as phaseLabelFn } from "./src/breathing/breathingConfig";
 import { formatMMSS } from "./src/utils/time";
 import { CircleBreath } from "./src/ui/CircleBreath";
 import { PrimaryButton } from "./src/ui/PrimaryButton";
@@ -20,7 +21,7 @@ import {
 } from "./src/monetization/premium";
 
 export default function App() {
-  const { phaseLabel, remainingSeconds, isRunning, circleScale, start, pause, reset } =
+  const { phaseLabel, remainingSeconds, isRunning, circleScale, start, pause, reset, phase } =
     useBreathing();
 
   // Começa como null para saber que ainda está carregando
@@ -82,7 +83,17 @@ export default function App() {
       <View style={styles.container}>
         <Text style={styles.title}>Respiração 1 Minuto</Text>
 
-        <Text style={styles.phase}>{phaseLabel}</Text>
+        {isRunning || remainingSeconds !== TOTAL_SECONDS ? (
+          <>
+            <Text style={styles.phase}>{phaseLabel}</Text>
+            <Text style={styles.phaseDesc}>{phaseDescription(phase)}</Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.phase}>Pronto para começar?</Text>
+            <Text style={styles.phaseDesc}>Toque em "Iniciar" para começar.</Text>
+          </>
+        )}
         <Text style={styles.timer}>{formatMMSS(remainingSeconds)}</Text>
 
         <View style={{ height: 22 }} />
@@ -100,7 +111,7 @@ export default function App() {
         <View style={{ height: 18 }} />
 
         <Text style={styles.hint}>
-          Faça 5 ciclos: 4s inspirar • 2s segurar • 6s soltar.
+          {`Faça 5 ciclos: ${PHASES.map(p => `${p.seconds}s ${phaseLabelFn(p.phase)}`).join(" • ")}.`}
         </Text>
 
         <View style={{ height: 18 }} />
@@ -152,6 +163,7 @@ const styles = StyleSheet.create({
   title: { color: "#EAF2FF", fontSize: 22, fontWeight: "700", marginBottom: 10 },
   phase: { color: "#EAF2FF", fontSize: 34, fontWeight: "700", marginTop: 6 },
   timer: { color: "#B7C6E6", fontSize: 26, marginTop: 6 },
+  phaseDesc: { color: "#B7C6E6", fontSize: 18, marginTop: 2, marginBottom: 2, textAlign: "center" },
   buttonsRow: { flexDirection: "row", alignItems: "center" },
   hint: { color: "#B7C6E6", textAlign: "center", fontSize: 14, lineHeight: 20 },
   footer: { color: "#6F87B6", fontSize: 12 }

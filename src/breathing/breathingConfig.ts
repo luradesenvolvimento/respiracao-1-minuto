@@ -21,3 +21,16 @@ export function phaseLabel(phase: Phase) {
       return "Concluído ✨";
   }
 }
+
+export function phaseDescription(phase: Phase) {
+  switch (phase) {
+    case "INHALE":
+      return "Agora, inspire profundamente pelo nariz";
+    case "HOLD":
+      return "Segure o ar nos pulmões";
+    case "EXHALE":
+      return "Solte o ar devagar pela boca";
+    case "DONE":
+      return "Parabéns! Você concluiu o ciclo.";
+  }
+}

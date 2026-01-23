@@ -1,28 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing } from "react-native";
-import { PHASES, TOTAL_SECONDS, Phase, phaseLabel as labelFn } from "./breathingConfig";
+import { BreathingExercise, Phase, phaseLabel as labelFn } from "./breathingConfig";
 
-function nextPhaseIndex(i: number) {
-  return (i + 1) % PHASES.length;
+function nextPhaseIndex(i: number, phases: Array<{ phase: Exclude<Phase, "DONE">; seconds: number }>) {
+  return (i + 1) % phases.length;
 }
 
-export function useBreathing() {
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(TOTAL_SECONDS);
+export function useBreathing(exercise: BreathingExercise) {
+  const { phases, duration } = exercise;
+  const [remainingSeconds, setRemainingSeconds] = useState<number>(duration);
   const [isRunning, setIsRunning] = useState<boolean>(false);
-
-  // fase atual é index em PHASES (INHALE/HOLD/EXHALE)
   const [phaseIndex, setPhaseIndex] = useState<number>(0);
-  const [phaseRemaining, setPhaseRemaining] = useState<number>(PHASES[0].seconds);
-
+  const [phaseRemaining, setPhaseRemaining] = useState<number>(phases[0].seconds);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // animação do círculo (escala)
   const circleScale = useRef(new Animated.Value(0.85)).current;
 
   const phase: Phase = useMemo(() => {
     if (remainingSeconds <= 0) return "DONE";
-    return PHASES[phaseIndex].phase;
-  }, [remainingSeconds, phaseIndex]);
+    return phases[phaseIndex].phase;
+  }, [remainingSeconds, phaseIndex, phases]);
 
   const phaseLabel = useMemo(() => labelFn(phase), [phase]);
 
@@ -32,8 +28,7 @@ export function useBreathing() {
   }
 
   function animateForPhase(p: Exclude<Phase, "DONE">) {
-    const seconds = PHASES.find(x => x.phase === p)?.seconds ?? 1;
-
+    const seconds = phases.find(x => x.phase === p)?.seconds ?? 1;
     Animated.timing(circleScale, {
       toValue: p === "INHALE" ? 1.15 : p === "EXHALE" ? 0.85 : 1.15,
       duration: seconds * 1000,
@@ -45,9 +40,9 @@ export function useBreathing() {
   function reset() {
     stopTimer();
     setIsRunning(false);
-    setRemainingSeconds(TOTAL_SECONDS);
+    setRemainingSeconds(duration);
     setPhaseIndex(0);
-    setPhaseRemaining(PHASES[0].seconds);
+    setPhaseRemaining(phases[0].seconds);
     circleScale.setValue(0.85);
   }
 
@@ -59,52 +54,42 @@ export function useBreathing() {
 
   function start() {
     if (isRunning) return;
-
     setIsRunning(true);
-
-    // sincroniza animação com a fase atual
-    const currentPhase = PHASES[phaseIndex].phase;
+    const currentPhase = phases[phaseIndex].phase;
     animateForPhase(currentPhase);
-
     intervalRef.current = setInterval(() => {
       setRemainingSeconds(prev => {
         if (prev <= 1) return 0;
         return prev - 1;
       });
-
       setPhaseRemaining(prevPR => {
         const nextPR = prevPR - 1;
         if (nextPR <= 0) {
           setPhaseIndex(prevPI => {
-            const newIndex = nextPhaseIndex(prevPI);
-            const newPhase = PHASES[newIndex].phase;
+            const newIndex = nextPhaseIndex(prevPI, phases);
+            const newPhase = phases[newIndex].phase;
             animateForPhase(newPhase);
             return newIndex;
           });
-          // O tempo será sincronizado pelo useEffect abaixo
           return 0;
         }
         return nextPR;
       });
     }, 1000);
   }
-  
-  // Sincroniza o tempo da fase sempre que o índice muda
-  useEffect(() => {
-    setPhaseRemaining(PHASES[phaseIndex].seconds);
-  }, [phaseIndex]);
 
-  // quando termina, para tudo e marca DONE
+  useEffect(() => {
+    setPhaseRemaining(phases[phaseIndex].seconds);
+  }, [phaseIndex, phases]);
+
   useEffect(() => {
     if (remainingSeconds === 0) {
       stopTimer();
       setIsRunning(false);
       circleScale.stopAnimation();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remainingSeconds]);
 
-  // cleanup
   useEffect(() => () => stopTimer(), []);
 
   return {

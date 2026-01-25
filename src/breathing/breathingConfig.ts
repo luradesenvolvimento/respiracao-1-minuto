@@ -5,10 +5,11 @@ export type BreathingState =
   | "ANXIETY_RELIEF"
   | "STRESS_RELEASE"
   | "GROUNDING"
+  | "GROUNDING1"
   | "FOCUS_CLARITY"
   | "SLEEP_CALM";
 
-export type BreathingDuration = 60 | 180 | 300; // segundos: 1min, 3min, 5min
+export type BreathingDuration = 60 | 120 | 180 | 300 | 1200; // segundos: 1min, 2min, 3min, 5min, 20min
 
 export type GuidedMode = "VOICE" | "SOUND" | "NONE";
 
@@ -20,6 +21,7 @@ export interface GuidedConfig {
 export interface BreathingExercise {
   state: BreathingState;
   label: string;
+  cycle: string;
   description: string;
   phases: Array<{ phase: Exclude<Phase, "DONE">; seconds: number }>;
   duration: BreathingDuration;
@@ -29,63 +31,68 @@ export interface BreathingExercise {
 export const BREATHING_EXERCISES: BreathingExercise[] = [
   {
     state: "ANXIETY_RELIEF",
-    label: "Alívio da Ansiedade",
+    label: "Ansiedade",
+    cycle: "4-4-4",
     description: "Respiração para acalmar a ansiedade.",
-    phases: [
-      { phase: "INHALE", seconds: 4 },
-      { phase: "HOLD", seconds: 2 },
-      { phase: "EXHALE", seconds: 6 }
-    ],
-    duration: 60
-    ,guided: { mode: "VOICE", audioFile: "assets/audio/ansiedade-voz.mp3" }
-  },
-  {
-    state: "STRESS_RELEASE",
-    label: "Liberação do Estresse",
-    description: "Respiração para aliviar o estresse.",
-    phases: [
-      { phase: "INHALE", seconds: 5 },
-      { phase: "HOLD", seconds: 3 },
-      { phase: "EXHALE", seconds: 7 }
-    ],
-    duration: 180
-    ,guided: { mode: "SOUND", audioFile: "assets/audio/estresse-som.mp3" }
-  },
-  {
-    state: "GROUNDING",
-    label: "Aterramento",
-    description: "Respiração para se sentir presente.",
     phases: [
       { phase: "INHALE", seconds: 4 },
       { phase: "HOLD", seconds: 4 },
       { phase: "EXHALE", seconds: 4 }
     ],
-    duration: 300
-    ,guided: { mode: "NONE" }
+    duration: 60,
+    guided: { mode: "VOICE", audioFile: "assets/audio/ansiedade-voz.mp3" }
   },
   {
-    state: "FOCUS_CLARITY",
-    label: "Foco e Clareza",
-    description: "Respiração para aumentar o foco.",
+    state: "STRESS_RELEASE",
+    label: "Estresse",
+    cycle: "4-6-8",
+    description: "Respiração para aliviar o estresse.",
     phases: [
-      { phase: "INHALE", seconds: 3 },
-      { phase: "HOLD", seconds: 3 },
-      { phase: "EXHALE", seconds: 6 }
+      { phase: "INHALE", seconds: 4 },
+      { phase: "HOLD", seconds: 6 },
+      { phase: "EXHALE", seconds: 8 }
     ],
-    duration: 60
-    ,guided: { mode: "VOICE", audioFile: "assets/audio/foco-voz.mp3" }
+    duration: 1200,
+    guided: { mode: "SOUND", audioFile: "assets/audio/estresse-som.mp3" }
   },
   {
-    state: "SLEEP_CALM",
-    label: "Calma para Dormir",
-    description: "Respiração para relaxar antes de dormir.",
+    state: "GROUNDING",
+    label: "Aterramento",
+    cycle: "4-7-8",
+    description: "Respiração para se sentir presente.",
     phases: [
       { phase: "INHALE", seconds: 4 },
       { phase: "HOLD", seconds: 7 },
       { phase: "EXHALE", seconds: 8 }
     ],
-    duration: 180
-    ,guided: { mode: "SOUND", audioFile: "assets/audio/dormir-som.mp3" }
+    duration: 120,
+    guided: { mode: "NONE" }
+  },
+  {
+    state: "GROUNDING1",
+    label: "Aterramento",
+    cycle: "4-7-8",
+    description: "Respiração para se sentir presente.",
+    phases: [
+      { phase: "INHALE", seconds: 4 },
+      { phase: "HOLD", seconds: 7 },
+      { phase: "EXHALE", seconds: 8 }
+    ],
+    duration: 120,
+    guided: { mode: "NONE" }
+  },
+  {
+    state: "FOCUS_CLARITY",
+    label: "Personalizado",
+    cycle: "Personalizado",
+    description: "Crie seu próprio ritmo de respiração.",
+    phases: [
+      { phase: "INHALE", seconds: 4 },
+      { phase: "HOLD", seconds: 4 },
+      { phase: "EXHALE", seconds: 6 }
+    ],
+    duration: 60,
+    guided: { mode: "VOICE", audioFile: "assets/audio/foco-voz.mp3" }
   }
 ];
 

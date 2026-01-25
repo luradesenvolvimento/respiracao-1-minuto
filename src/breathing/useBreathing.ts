@@ -14,6 +14,8 @@ export function useBreathing(exercise: BreathingExercise) {
   const [phaseRemaining, setPhaseRemaining] = useState<number>(phases[0].seconds);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const circleScale = useRef(new Animated.Value(0.85)).current;
+  const circleRotation = useRef(new Animated.Value(0)).current;
+  const rotationAnimRef = useRef<Animated.CompositeAnimation | null>(null);
 
   const phase: Phase = useMemo(() => {
     if (remainingSeconds <= 0) return "DONE";
@@ -25,6 +27,26 @@ export function useBreathing(exercise: BreathingExercise) {
   function stopTimer() {
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = null;
+  }
+
+  function startRotation() {
+    // Para rotação contínua durante a sessão
+    rotationAnimRef.current = Animated.loop(
+      Animated.timing(circleRotation, {
+        toValue: 1,
+        duration: 8000, // Uma rotação completa a cada 8 segundos
+        easing: Easing.linear,
+        useNativeDriver: true
+      })
+    );
+    rotationAnimRef.current.start();
+  }
+
+  function stopRotation() {
+    if (rotationAnimRef.current) {
+      rotationAnimRef.current.stop();
+      rotationAnimRef.current = null;
+    }
   }
 
   function animateForPhase(p: Exclude<Phase, "DONE">) {
@@ -39,15 +61,18 @@ export function useBreathing(exercise: BreathingExercise) {
 
   function reset() {
     stopTimer();
+    stopRotation();
     setIsRunning(false);
     setRemainingSeconds(duration);
     setPhaseIndex(0);
     setPhaseRemaining(phases[0].seconds);
     circleScale.setValue(0.85);
+    circleRotation.setValue(0);
   }
 
   function pause() {
     stopTimer();
+    stopRotation();
     setIsRunning(false);
     circleScale.stopAnimation();
   }
@@ -55,6 +80,7 @@ export function useBreathing(exercise: BreathingExercise) {
   function start() {
     if (isRunning) return;
     setIsRunning(true);
+    startRotation();
     const currentPhase = phases[phaseIndex].phase;
     animateForPhase(currentPhase);
     intervalRef.current = setInterval(() => {
@@ -85,12 +111,16 @@ export function useBreathing(exercise: BreathingExercise) {
   useEffect(() => {
     if (remainingSeconds === 0) {
       stopTimer();
+      stopRotation();
       setIsRunning(false);
       circleScale.stopAnimation();
     }
   }, [remainingSeconds]);
 
-  useEffect(() => () => stopTimer(), []);
+  useEffect(() => () => {
+    stopTimer();
+    stopRotation();
+  }, []);
 
   return {
     phase,
@@ -98,6 +128,7 @@ export function useBreathing(exercise: BreathingExercise) {
     remainingSeconds,
     isRunning,
     circleScale,
+    circleRotation,
     start,
     pause,
     reset

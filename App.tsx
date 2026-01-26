@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect, useState, useMemo } from "react";
 import { BREATHING_EXERCISES, BreathingExercise, BreathingDuration, phaseLabel as phaseLabelFn } from "./src/breathing/breathingConfig";
 // import { BreathingCarousel } from "./src/ui/BreathingCarousel";
@@ -11,6 +8,8 @@ import { AdBanner } from "./src/monetization/AdBanner";
 import { PremiumCard } from "./src/premium/PremiumCard";
 import { useBreathing } from "./src/breathing/useBreathing";
 import { LockedIcon } from "./src/ui/icon/LockedIcon";
+import { HistoryScreen } from "./src/screens/HistoryScreen";
+import { HomeScreen } from "./src/screens/HomeScreen";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 import {
@@ -80,12 +79,17 @@ function App() {
 
   // Adiciona ao histórico ao concluir uma sessão
   // Recebe o exercício usado como parâmetro
-  async function onSessionEnd(exercise: BreathingExercise) {
+  async function onSessionEnd(exercise: BreathingExercise, completedSeconds?: number) {
+    // completedSeconds: quanto tempo o usuário completou (pode ser igual à duração para completo)
+    const isComplete = !completedSeconds || completedSeconds >= exercise.duration;
     await addHistoryItem({
       id: `${Date.now()}`,
       state: exercise.state,
+      label: exercise.cycle || exercise.label,
       duration: exercise.duration,
-      date: new Date().toISOString()
+      completedSeconds: completedSeconds ?? exercise.duration,
+      date: new Date().toISOString(),
+      status: isComplete ? "complete" : "partial"
     });
     const history = await getHistory();
     setHistoryCount(history.length);
@@ -158,178 +162,39 @@ function App() {
       >
         <SafeAreaView style={styles.safeContent}>
           <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>Respiração 1 Minuto</Text>
-              <Text style={styles.subtitle}>Relaxe e respire profundamente.</Text>
-            </View>
-
-            {/* Carrossel de Exercícios */}
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.rhythmCarousel}
-              snapToInterval={90}
-              decelerationRate="fast"
-            >
-              {BREATHING_EXERCISES.map((exercise, index) => {
-                const locked = isExerciseLocked(index);
-                const isLastExercise = index === BREATHING_EXERCISES.length - 1;
-                return (
-                  <Pressable
-                    key={exercise.state}
-                    style={[
-                      styles.rhythmBtn, 
-                      selectedIndex === index && styles.rhythmBtnActive, 
-                      locked && styles.rhythmBtnLocked
-                    ]}
-                    onPress={() => {
-                      if (locked) {
-                        setShowPremiumModal(true);
-                      } else {
-                        setSelectedIndex(index);
-                      }
-                    }}
-                  >
-                    {/* Cadeado para exercícios bloqueados */}
-                    {locked && (
-                      <View style={styles.lockIconSmall}>
-                        <LockedIcon width={14} height={14} color="#ccd0a0ff" />
-                      </View>
-                    )}
-                    <Text style={[styles.rhythmLabel, locked && styles.rhythmLabelLocked]}>
-                      {exercise.label}
-                    </Text>
-                    <Text style={[styles.rhythmLabel, locked && styles.rhythmLabelLocked]}>
-                      {exercise.cycle}
-                    </Text>
-                    <Text style={[styles.rhythmSublabel, locked && styles.rhythmLabelLocked]}>
-                      { formatDuration(exercise.duration) }
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-
-            {/* Respiração Selecionada */}
-            <View style={styles.rhythmSelected}>
-              <Text style={styles.title}>{currentExercise.label}</Text>
-              <Text style={styles.subtitle}>{currentExercise.description}</Text>
-              <Text style={styles.subtitle}>{`${currentExercise.cycle} - ${formatDuration(currentExercise.duration)}`}</Text>
-            </View>
-
-            {/* Círculo central com contador */}
-            <View style={styles.circleContainer}>
-              <Animated.View 
-                style={[
-                  styles.circleOuter,
-                  { 
-                    transform: [
-                      { rotate: rotateInterpolation },
-                      { scale: circleScale }
-                    ] 
-                  }
-                ]}
-              >
-                <LinearGradient
-                  colors={['#00d4aa', '#00b8d4', '#0099cc', '#00d4aa']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.circleGradient}
-                >
-                  <Animated.View 
-                    style={[
-                      styles.circleInner,
-                      { transform: [{ rotate: rotateInverseInterpolation }] }
-                    ]}
-                  >
-                    <Text style={styles.phaseText}>
-                      {phaseLabel}
-                    </Text>
-                    <Text style={styles.counterText}>{remainingSeconds}</Text>
-                  </Animated.View>
-                </LinearGradient>
-              </Animated.View>
-            </View>
-
-            {/* Botão Iniciar/Pausar */}
-            <Pressable 
-              style={styles.startBtn}
-              onPress={() => {
-                if (remainingSeconds === 0) {
-                  reset();
-                } else if (isRunning) {
-                  pause();
-                } else {
-                  start();
-                }
-              }}
-            >
-              <LinearGradient
-                colors={isRunning ? ['#64b4ffe6', '#4682c8b3', '#1a5a8a'] : ['#1a5a8a', '#0d3a5a', '#0a2a4a']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.startBtnGradient}
-              >
-                <Text style={styles.startBtnText}>
-                  {remainingSeconds === 0 ? 'Reiniciar' : isRunning ? 'Pausar' : 'Iniciar'}
-                </Text>
-              </LinearGradient>
-            </Pressable>
-
-            {/* Botão Reiniciar (Premium) */}
-            {isPremium && (
-              <Pressable 
-                style={styles.resetBtn}
-                onPress={() => {
-                  reset();
-                }}
-              >
-                <Text style={styles.resetBtnText}>Reiniciar Contagem</Text>
-              </Pressable>
-            )}
-
-            {/* Modal Premium */}
-            <Modal
-              visible={showPremiumModal}
-              animationType="slide"
-              transparent
-              onRequestClose={() => setShowPremiumModal(false)}
-            >
-              <View style={modalStyles.overlay}>
-                <View style={modalStyles.cardContainer}>
-                  <PremiumCard
-                    isPremium={isPremium ?? false}
-                    priceLabel={priceLabel}
-                    onBuy={onBuy}
-                    onRestore={onRestore}
-                  />
-                  <Pressable onPress={() => setShowPremiumModal(false)} style={modalStyles.closeBtn}>
-                    <Text style={{ color: '#4F8EF7', fontWeight: 'bold', fontSize: 15 }}>Fechar</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </Modal>
-
-            {/* Ads: só para NÃO premium */}
-            <AdBanner show={isPremium === false} />
-
-            {/* DEBUG: Só aparece em desenvolvimento (Expo Go) */}
-            {IS_DEV_MODE && (
-              <Text
-                style={[styles.debugBtn, {borderWidth: 1, borderColor: "#444", padding: 4, borderRadius: 4}]}
-                onPress={async () => {
-                  if (isPremium) {
-                    await DEBUG_clearPremium();
-                    setIsPremium(false);
-                    Alert.alert("Debug", "Premium removido!");
-                  } else {
-                    Alert.alert("Debug", "Você ainda não é premium. Clique em Apoiar primeiro.");
-                  }
-                }}
-              >
-                [DEV] {isPremium ? "Resetar Premium ✓" : "Premium inativo"}
-              </Text>
+            {activeTab === 'historico' ? (
+              <HistoryScreen />
+            ) : (
+              <HomeScreen
+                BREATHING_EXERCISES={BREATHING_EXERCISES}
+                selectedIndex={selectedIndex}
+                setSelectedIndex={setSelectedIndex}
+                isExerciseLocked={isExerciseLocked}
+                currentExercise={currentExercise}
+                phaseLabel={phaseLabel}
+                remainingSeconds={remainingSeconds}
+                isRunning={isRunning}
+                circleScale={circleScale}
+                rotateInterpolation={rotateInterpolation}
+                rotateInverseInterpolation={rotateInverseInterpolation}
+                start={start}
+                pause={pause}
+                reset={reset}
+                isPremium={isPremium}
+                showPremiumModal={showPremiumModal}
+                setShowPremiumModal={setShowPremiumModal}
+                priceLabel={priceLabel}
+                onBuy={onBuy}
+                onRestore={onRestore}
+                AdBanner={AdBanner}
+                PremiumCard={PremiumCard}
+                IS_DEV_MODE={IS_DEV_MODE}
+                DEBUG_clearPremium={DEBUG_clearPremium}
+                setIsPremium={setIsPremium}
+                Alert={Alert}
+                historyCount={historyCount}
+                formatDuration={formatDuration}
+              />
             )}
           </View>
 

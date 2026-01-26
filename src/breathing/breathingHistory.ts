@@ -1,10 +1,16 @@
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export type BreathingStatus = "complete" | "partial" | "stopped";
 
 export interface BreathingHistoryItem {
   id: string;
   state: string;
-  duration: number;
+  label: string; // Ex: "4-4-4"
+  duration: number; // duração total em segundos
+  completedSeconds: number; // quanto tempo foi feito
   date: string; // ISO string
+  status: BreathingStatus;
 }
 
 const HISTORY_KEY = 'breathing_history';

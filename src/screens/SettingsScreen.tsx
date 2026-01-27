@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Header } from "../ui/Header";
+import FooterLinks from "../ui/FooterLinks";
 
 export const SettingsScreen: React.FC = () => {
   return (
@@ -15,6 +16,7 @@ export const SettingsScreen: React.FC = () => {
         <Text style={styles.comingSoonSubtext}>
           Estamos trabalhando em novas funcionalidades para personalizar sua experiência de respiração.
         </Text>
+        <FooterLinks />
       </View>
     </View>
   );

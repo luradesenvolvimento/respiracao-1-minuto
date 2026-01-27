@@ -16,6 +16,7 @@ export function useBreathing(exercise: BreathingExercise, handlers?: { onBreathC
   const circleScale = useRef(new Animated.Value(0.85)).current;
   const circleRotation = useRef(new Animated.Value(0)).current;
   const rotationAnimRef = useRef<Animated.CompositeAnimation | null>(null);
+  const resettingRef = useRef<boolean>(false);
 
   const phase: Phase = useMemo(() => {
     if (remainingSeconds <= 0) return "DONE";
@@ -60,14 +61,38 @@ export function useBreathing(exercise: BreathingExercise, handlers?: { onBreathC
   }
 
   function reset() {
+    // Prevent concurrent resets which can cause animation conflicts
+    if (resettingRef.current) return;
+    resettingRef.current = true;
+
     stopTimer();
     stopRotation();
     setIsRunning(false);
     setRemainingSeconds(duration);
     setPhaseIndex(0);
     setPhaseRemaining(phases[0].seconds);
-    circleScale.setValue(0.85);
-    circleRotation.setValue(0);
+
+    // Stop any running scale animation, then force value to base
+    try {
+      circleScale.stopAnimation(() => {
+        circleScale.setValue(0.85);
+      });
+    } catch (e) {
+      // In case stopAnimation isn't available or fails, fallback to setValue
+      try { circleScale.setValue(0.85); } catch {}
+    }
+
+    // Stop rotation animation and reset value. Use stopAnimation to ensure
+    // any native animation is halted before setting the value.
+    try {
+      circleRotation.stopAnimation(() => {
+        circleRotation.setValue(0);
+        resettingRef.current = false;
+      });
+    } catch (e) {
+      try { circleRotation.setValue(0); } catch {}
+      resettingRef.current = false;
+    }
   }
 
   function pause() {

@@ -29,7 +29,12 @@ export const NavigationContainer: React.FC<NavigationContainerProps> = ({
           />
         );
       case TabType.HISTORICO:
-        return <HistoryScreen />;
+        return (
+          <HistoryScreen
+            isPremium={isPremium}
+            onShowPremiumModal={onShowPremiumModal}
+          />
+        );
       case TabType.CONFIG:
         return <SettingsScreen />;
       case TabType.PREMIUM:

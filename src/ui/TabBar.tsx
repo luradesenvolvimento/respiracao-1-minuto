@@ -9,9 +9,10 @@ import { TabType } from '../types';
 interface TabBarProps {
   activeTab: TabType;
   onTabPress: (tab: TabType) => void;
+  isPremium?: boolean | null;
 }
 
-export const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabPress }) => {
+export const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabPress, isPremium }) => {
   const activeColor = '#5ac8fa';
   const inactiveColor = '#7a9cba';
 
@@ -30,9 +31,18 @@ export const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabPress }) => {
         style={styles.tabItem}
         onPress={() => onTabPress(TabType.HISTORICO)}
       >
-        <Text style={[styles.tabIcon, activeTab === TabType.HISTORICO && styles.tabIconActive]}>
-          <HistoryIcon width={32} height={32} color={activeTab === TabType.HISTORICO ? activeColor : inactiveColor} />
-        </Text>
+        <View style={styles.historyTabIcon}>
+          <Text style={[styles.tabIcon, activeTab === TabType.HISTORICO && styles.tabIconActive]}>
+            <HistoryIcon width={32} height={32} color={activeTab === TabType.HISTORICO ? activeColor : inactiveColor} />
+          </Text>
+          {!isPremium && (
+            <View style={styles.historyLockBadge}>
+              <Text style={{fontSize: 8}}>
+                <LockedIcon width={12} height={12} color={activeTab === TabType.HISTORICO ? activeColor : '#ccd0a0ff'} />
+              </Text>
+            </View>
+          )}
+        </View>
         <Text style={[styles.tabLabel, activeTab === TabType.HISTORICO && styles.tabLabelActive]}>Histórico</Text>
       </Pressable>
       <Pressable
@@ -100,6 +110,17 @@ const styles = StyleSheet.create({
   premiumLockBadge: {
     position: 'absolute',
     bottom: 0,
+    right: -6,
+    backgroundColor: '#0a1628',
+    borderRadius: 6,
+    padding: 1,
+  },
+  historyTabIcon: {
+    position: 'relative',
+  },
+  historyLockBadge: {
+    position: 'absolute',
+    bottom: -2,
     right: -6,
     backgroundColor: '#0a1628',
     borderRadius: 6,

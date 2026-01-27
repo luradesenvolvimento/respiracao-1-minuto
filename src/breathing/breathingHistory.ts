@@ -12,10 +12,15 @@ export interface BreathingHistoryItem {
 }
 
 const HISTORY_KEY = 'breathing_history';
+const MAX_HISTORY = 90;
 
 export async function addHistoryItem(item: BreathingHistoryItem) {
   const history = await getHistory();
   history.unshift(item);
+  // enforce max history length: remove oldest entries beyond MAX_HISTORY
+  if (history.length > MAX_HISTORY) {
+    history.splice(MAX_HISTORY); // remove items starting at index MAX_HISTORY
+  }
   await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(history));
 }
 

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
+import FooterLinks from "../ui/FooterLinks";
+import { PrimaryButton } from "../ui/PrimaryButton";
 import { getHistory, BreathingHistoryItem } from "../breathing/breathingHistory";
 import { BREATHING_EXERCISES } from "../breathing/breathingConfig";
 import { Header } from "../ui/Header";
@@ -22,7 +24,12 @@ interface GroupedHistory {
   items: BreathingHistoryItem[];
 }
 
-export const HistoryScreen: React.FC = () => {
+interface HistoryScreenProps {
+  isPremium: boolean | null;
+  onShowPremiumModal: () => void;
+}
+
+export const HistoryScreen: React.FC<HistoryScreenProps> = ({ isPremium, onShowPremiumModal }) => {
   const [history, setHistory] = useState<BreathingHistoryItem[]>([]);
 
   useEffect(() => {
@@ -115,6 +122,27 @@ export const HistoryScreen: React.FC = () => {
 
   const grouped = groupByDate(history);
 
+  // If user is not premium, show upgrade prompt instead of history
+  if (!isPremium) {
+    return (
+      <View style={styles.container}>
+        <Header
+          title="Histórico"
+          subtitle="Veja seu progresso de respiração."
+        />
+
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>Histórico disponível apenas para usuários Premium.</Text>
+          <Text style={styles.emptySubtext}>Faça upgrade para acessar seu histórico completo.</Text>
+          <View style={{ height: 16 }} />
+          <PrimaryButton label="Assinar Premium" onPress={onShowPremiumModal} />
+        </View>
+
+        <FooterLinks />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Header
@@ -187,6 +215,8 @@ export const HistoryScreen: React.FC = () => {
           ))
         )}
       </ScrollView>
+
+      {/* <FooterLinks /> */}
     </View>
   );
 };
@@ -202,6 +232,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     marginTop: 20,
+    paddingBottom: 110,
   },
   emptyState: {
     alignItems: 'center',
@@ -320,5 +351,26 @@ const styles = StyleSheet.create({
   progressLabel: {
     color: '#7a9cba',
     fontSize: 10,
+  },
+  footerContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 18,
+    alignItems: 'center',
+  },
+  footerInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  footerLink: {
+    color: '#9fb7d3',
+    fontSize: 12,
+    textDecorationLine: 'underline',
+    marginHorizontal: 6,
+  },
+  footerSeparator: {
+    color: '#7a9cba',
+    fontSize: 12,
   },
 });

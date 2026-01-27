@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { BREATHING_EXERCISES, BreathingExercise } from "../breathing/breathingConfig";
 import { addHistoryItem, getHistory } from "../breathing/breathingHistory";
-import { View, Alert, AppState, AppStateStatus } from "react-native";
+import { View, Alert, AppState, AppStateStatus, InteractionManager } from "react-native";
 import { useBreathing } from "../breathing/useBreathing";
 import { Header } from "../ui/Header";
 import { SelectedExercise } from "../ui/SelectedExercise";
@@ -10,6 +10,7 @@ import { ControlButtons } from "../ui/ControlButtons";
 import { ExerciseCarousel } from "../ui/ExerciseCarousel";
 import { AdBanner } from "../monetization/AdBanner";
 import { DevDebugButton } from "../ui/DevDebugButton";
+import FooterLinks from "../ui/FooterLinks";
 
 interface HomeScreenProps {
   isPremium: boolean | null;
@@ -44,7 +45,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   } = useBreathing(currentExercise, {
     onBreathComplete: async () => {
       // called everytime a full breath cycle finishes (EXHALE completed)
-      // record a completed breath in history
+      // only record history for premium users
+      if (!isPremium) return;
+
       const breathDuration = currentExercise.phases.reduce((s, p) => s + p.seconds, 0);
       await addHistoryItem({
         id: `${Date.now()}`,
@@ -73,6 +76,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   // Adiciona ao histórico ao concluir uma sessão
   async function onSessionEnd(exercise: BreathingExercise) {
+    if (!isPremium) return;
+
     await addHistoryItem({
       id: `${Date.now()}`,
       state: exercise.state,
@@ -91,6 +96,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   async function recordIncompleteIfNeeded() {
     try {
+      if (!isPremium) return;
       if (hasRecordedOnExitRef.current) return;
       if (remainingSeconds === 0 || remainingSeconds === currentExercise.duration) return;
 
@@ -192,8 +198,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         }}
         onReset={async () => {
           // se reset for chamado durante uma sessão (não completa), gravar como incompleta
+          // Agendamos a gravação para rodar APÓS interações/animations para evitar qualquer
+          // trabalho de IO no meio do frame que possa travar a animação do círculo.
           if (remainingSeconds > 0 && remainingSeconds < currentExercise.duration) {
-            await recordIncompleteIfNeeded();
+            InteractionManager.runAfterInteractions(() => {
+              void recordIncompleteIfNeeded();
+            });
           }
           // reset guard so next session can record on exit again
           hasRecordedOnExitRef.current = false;
@@ -207,10 +217,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       />
 
       {/* DEBUG: Só aparece em desenvolvimento (Expo Go) */}
-      <DevDebugButton
-        isPremium={isPremium}
-        onPremiumChange={onPremiumChange}
-      />
+      {__DEV__ && (
+        <DevDebugButton
+          isPremium={isPremium}
+          onPremiumChange={onPremiumChange}
+        />
+      )}
+      <FooterLinks />
     </View>
   );
 };

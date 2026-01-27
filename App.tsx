@@ -106,6 +106,7 @@ function App() {
                 setShowPremiumModal(true);
               }
             }}
+            isPremium={isPremium}
           />
         </SafeAreaView>
       </LinearGradient>

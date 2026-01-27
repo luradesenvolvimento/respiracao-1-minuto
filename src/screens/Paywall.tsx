@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, ActivityIndicator, Alert } from 'react-native';
 import { usePremium } from '../premium/PremiumContext';
+import FooterLinks from "../ui/FooterLinks";
 import { buyProduct, buySubscription } from '../iap/iapService';
 
 export default function Paywall() {
@@ -74,6 +75,7 @@ export default function Paywall() {
       >
         <Text style={{ textAlign: 'center', opacity: 0.8 }}>Restore purchases</Text>
       </Pressable>
+      <FooterLinks />
     </View>
   );
 }

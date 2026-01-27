@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { BREATHING_EXERCISES, BreathingExercise } from "../breathing/breathingConfig";
 import { addHistoryItem, getHistory } from "../breathing/breathingHistory";
-import { View, Alert } from "react-native";
+import { View, Alert, AppState, AppStateStatus } from "react-native";
 import { useBreathing } from "../breathing/useBreathing";
 import { Header } from "../ui/Header";
 import { SelectedExercise } from "../ui/SelectedExercise";
@@ -36,10 +36,28 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     isRunning,
     circleScale,
     circleRotation,
+    phaseIndex,
+    phaseRemaining,
     start,
     pause,
     reset
-  } = useBreathing(currentExercise);
+  } = useBreathing(currentExercise, {
+    onBreathComplete: async () => {
+      // called everytime a full breath cycle finishes (EXHALE completed)
+      // record a completed breath in history
+      const breathDuration = currentExercise.phases.reduce((s, p) => s + p.seconds, 0);
+      await addHistoryItem({
+        id: `${Date.now()}`,
+        state: currentExercise.state,
+        duration: breathDuration,
+        date: new Date().toISOString(),
+        completed: true,
+        stoppedAt: breathDuration
+      });
+      const history = await getHistory();
+      setHistoryCount(history.length);
+    }
+  });
 
   // Quando terminar a sessão
   useEffect(() => {
@@ -59,11 +77,64 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       id: `${Date.now()}`,
       state: exercise.state,
       duration: exercise.duration,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      completed: true,
+      stoppedAt: exercise.duration
     });
     const history = await getHistory();
     setHistoryCount(history.length);
   }
+
+  // We'll record incomplete session entries only on reset, exit (unmount) or app background.
+  // Pausar NÃO registra nada.
+  const hasRecordedOnExitRef = useRef(false);
+
+  async function recordIncompleteIfNeeded() {
+    try {
+      if (hasRecordedOnExitRef.current) return;
+      if (remainingSeconds === 0 || remainingSeconds === currentExercise.duration) return;
+
+      // Record an incomplete BREATH entry at the current point in the breath
+      const breathDuration = currentExercise.phases.reduce((s, p) => s + p.seconds, 0);
+      const phases = currentExercise.phases;
+      const elapsedBeforePhase = phases.slice(0, phaseIndex).reduce((s, p) => s + p.seconds, 0);
+      const currentPhaseSeconds = phases[phaseIndex]?.seconds ?? 0;
+      const elapsedInPhase = currentPhaseSeconds - phaseRemaining;
+      const elapsedInBreath = Math.max(0, elapsedBeforePhase + elapsedInPhase);
+
+      await addHistoryItem({
+        id: `${Date.now()}`,
+        state: currentExercise.state,
+        duration: breathDuration,
+        date: new Date().toISOString(),
+        completed: false,
+        stoppedAt: elapsedInBreath
+      });
+      const history = await getHistory();
+      setHistoryCount(history.length);
+      hasRecordedOnExitRef.current = true;
+    } catch (e) {
+      // swallow errors to avoid blocking unmount/background
+    }
+  }
+
+  // Register AppState listener to record when app goes to background/inactive
+  useEffect(() => {
+    const handleAppStateChange = (nextState: AppStateStatus) => {
+      if (nextState === 'background' || nextState === 'inactive') {
+        // fire and forget
+        recordIncompleteIfNeeded();
+      }
+    };
+
+    const sub = AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      sub.remove();
+      // also record once more on unmount/navigation away
+      // don't await in cleanup
+      recordIncompleteIfNeeded();
+    };
+  }, [remainingSeconds, phaseIndex, phaseRemaining, currentExercise]);
 
   // Formatar duração em minutos
   const formatDuration = (seconds: number) => {
@@ -103,20 +174,31 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       />
 
       {/* Botões de Controle */}
-      <ControlButtons
+        <ControlButtons
         remainingSeconds={remainingSeconds}
         isRunning={isRunning}
         isPremium={isPremium}
-        onStartPause={() => {
+        onStartPause={async () => {
           if (remainingSeconds === 0) {
             reset();
           } else if (isRunning) {
+            // apenas pausar — não gravamos nada aqui
             pause();
           } else {
+            // starting a new session -> allow future exit-recordings again
+            hasRecordedOnExitRef.current = false;
             start();
           }
         }}
-        onReset={reset}
+        onReset={async () => {
+          // se reset for chamado durante uma sessão (não completa), gravar como incompleta
+          if (remainingSeconds > 0 && remainingSeconds < currentExercise.duration) {
+            await recordIncompleteIfNeeded();
+          }
+          // reset guard so next session can record on exit again
+          hasRecordedOnExitRef.current = false;
+          reset();
+        }}
       />
 
       {/* Ads: só para NÃO premium */}

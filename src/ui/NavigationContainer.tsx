@@ -3,8 +3,7 @@ import { View } from "react-native";
 import { HomeScreen } from "../screens/HomeScreen";
 import { HistoryScreen } from "../screens/HistoryScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
-
-type TabType = 'respiracao' | 'historico' | 'premium' | 'config';
+import { TabType } from "../types";
 
 interface NavigationContainerProps {
   activeTab: TabType;
@@ -21,7 +20,7 @@ export const NavigationContainer: React.FC<NavigationContainerProps> = ({
 }) => {
   const renderScreen = () => {
     switch (activeTab) {
-      case 'respiracao':
+      case TabType.RESPIRACAO:
         return (
           <HomeScreen
             isPremium={isPremium}
@@ -29,11 +28,11 @@ export const NavigationContainer: React.FC<NavigationContainerProps> = ({
             onPremiumChange={onPremiumChange}
           />
         );
-      case 'historico':
+      case TabType.HISTORICO:
         return <HistoryScreen />;
-      case 'config':
+      case TabType.CONFIG:
         return <SettingsScreen />;
-      case 'premium':
+      case TabType.PREMIUM:
         // Para premium, podemos mostrar a tela home ou uma tela específica
         return (
           <HomeScreen

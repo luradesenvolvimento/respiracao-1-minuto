@@ -6,8 +6,9 @@ interface ControlButtonsProps {
   remainingSeconds: number;
   isRunning: boolean;
   isPremium: boolean | null;
-  onStartPause: () => void;
-  onReset: () => void;
+  // allow handler to return a Promise (we call async wrappers sometimes)
+  onStartPause: () => void | Promise<void>;
+  onReset: () => void | Promise<void>;
 }
 
 export const ControlButtons: React.FC<ControlButtonsProps> = ({

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Modal, Pressable, StyleSheet } from 'react-native';
 import { PremiumCard } from '../premium/PremiumCard';
 
@@ -19,6 +19,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   onBuy,
   onRestore
 }) => {
+  // If user already became premium while modal is open, close it automatically
+  useEffect(() => {
+    if (visible && isPremium) {
+      onClose();
+    }
+  }, [visible, isPremium, onClose]);
   return (
     <Modal
       visible={visible}

@@ -6,7 +6,7 @@ function nextPhaseIndex(i: number, phases: Array<{ phase: Exclude<Phase, "DONE">
   return (i + 1) % phases.length;
 }
 
-export function useBreathing(exercise: BreathingExercise) {
+export function useBreathing(exercise: BreathingExercise, handlers?: { onBreathComplete?: () => void }) {
   const { phases, duration } = exercise;
   const [remainingSeconds, setRemainingSeconds] = useState<number>(duration);
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -92,8 +92,19 @@ export function useBreathing(exercise: BreathingExercise) {
         const nextPR = prevPR - 1;
         if (nextPR <= 0) {
           setPhaseIndex(prevPI => {
+            // prevPI is the phase index that's finishing now
+            const finishingPhase = phases[prevPI].phase;
             const newIndex = nextPhaseIndex(prevPI, phases);
             const newPhase = phases[newIndex].phase;
+            // If we finished an EXHALE, that means a full breath cycle completed
+            if (finishingPhase === 'EXHALE') {
+              try {
+                handlers?.onBreathComplete?.();
+              } catch (e) {
+                // swallow errors from handlers to avoid breaking the timer
+                // handler is responsible for its own async work
+              }
+            }
             animateForPhase(newPhase);
             return newIndex;
           });
@@ -129,6 +140,8 @@ export function useBreathing(exercise: BreathingExercise) {
     isRunning,
     circleScale,
     circleRotation,
+    phaseIndex,
+    phaseRemaining,
     start,
     pause,
     reset

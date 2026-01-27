@@ -3,8 +3,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export interface BreathingHistoryItem {
   id: string;
   state: string;
-  duration: number;
-  date: string; // ISO string
+  duration: number; // configured total duration (seconds)
+  date: string; // ISO string when the session was recorded
+  completed: boolean; // true if the session reached the end
+  // stoppedAt: seconds elapsed from the start when the session stopped.
+  // If completed === true, stoppedAt should be equal to duration.
+  stoppedAt?: number | null;
 }
 
 const HISTORY_KEY = 'breathing_history';

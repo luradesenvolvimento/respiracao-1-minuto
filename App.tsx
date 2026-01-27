@@ -1,12 +1,10 @@
-
-
-
 import React, { useEffect, useState } from "react";
 import { SafeAreaView, StatusBar, StyleSheet, View, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { PremiumModal } from "./src/ui/PremiumModal";
 import { TabBar } from "./src/ui/TabBar";
 import { NavigationContainer } from "./src/ui/NavigationContainer";
+import { TabType } from "./src/types";
 
 import {
   initIAP,
@@ -21,8 +19,9 @@ function App() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
   const [priceLabel, setPriceLabel] = useState("R$ 4,99");
+
   // Estado da aba ativa
-  const [activeTab, setActiveTab] = useState<'respiracao'|'historico'|'premium'|'config'>('respiracao');
+  const [activeTab, setActiveTab] = useState<TabType>(TabType.RESPIRACAO);
 
   useEffect(() => {
     let mounted = true;
@@ -47,8 +46,10 @@ function App() {
     try {
       await buyPremium();
       setIsPremium(true);
+      setShowPremiumModal(false);
       Alert.alert("Obrigado 💙", "Premium ativado! Você apoiou o app.");
     } catch (e: any) {
+      setShowPremiumModal(false);
       const msg = e?.message || "Não foi possível concluir a compra.";
       Alert.alert("Compra não concluída", msg);
     }
@@ -59,11 +60,13 @@ function App() {
       const ok = await restorePremium();
       if (ok) {
         setIsPremium(true);
+        setShowPremiumModal(false);
         Alert.alert("Restaurado ✨", "Sua compra foi restaurada.");
       } else {
         Alert.alert("Nada para restaurar", "Não encontramos compra associada.");
       }
     } catch (e: any) {
+      setShowPremiumModal(false);
       Alert.alert("Erro", e?.message || "Falha ao restaurar.");
     }
   }
@@ -99,7 +102,7 @@ function App() {
             activeTab={activeTab}
             onTabPress={(tab) => {
               setActiveTab(tab);
-              if (tab === 'premium') {
+              if (tab === TabType.PREMIUM) {
                 setShowPremiumModal(true);
               }
             }}

@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { HomeScreen } from "../screens/HomeScreen";
 import { HistoryScreen } from "../screens/HistoryScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
+// import { PaywallScreen } from "../screens/PaywallScreen";
 import { TabType } from "../types";
 
 interface NavigationContainerProps {
@@ -38,14 +39,13 @@ export const NavigationContainer: React.FC<NavigationContainerProps> = ({
       case TabType.CONFIG:
         return <SettingsScreen />;
       case TabType.PREMIUM:
-        // Para premium, podemos mostrar a tela home ou uma tela específica
+        // Agora exibe a tela Paywall
         return (
           <HomeScreen
             isPremium={isPremium}
             onShowPremiumModal={onShowPremiumModal}
             onPremiumChange={onPremiumChange}
-          />
-        );
+          />);
       default:
         return (
           <HomeScreen

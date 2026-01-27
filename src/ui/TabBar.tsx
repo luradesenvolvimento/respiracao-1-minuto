@@ -38,7 +38,7 @@ export const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabPress, isPremium
           {!isPremium && (
             <View style={styles.historyLockBadge}>
               <Text style={{fontSize: 8}}>
-                <LockedIcon width={12} height={12} color={activeTab === TabType.HISTORICO ? activeColor : '#ccd0a0ff'} />
+                <LockedIcon width={14} height={14} color={activeTab === TabType.HISTORICO ? activeColor : '#ccd0a0ff'} />
               </Text>
             </View>
           )}

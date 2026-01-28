@@ -1,15 +1,11 @@
 {
   "name": "respiracao-1-minuto",
   "version": "1.0.0",
-  "main": "node_modules/expo/AppEntry.js",
+  "main": "index.js",
   "scripts": {
-    "start": "react-native start",
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "clean-android": "cd android && ./gradlew clean",
-    "pod-install": "npx pod-install",
-    "eas-android": "eas build --platform android",
-    "eas-ios": "eas build --platform ios"
+  "start": "react-native start",
+  "android": "NODE_ENV=development react-native run-android",
+  "ios": "react-native run-ios"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",

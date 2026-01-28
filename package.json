@@ -4,12 +4,18 @@
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "react-native start",
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "clean-android": "cd android && ./gradlew clean",
     "pod-install": "npx pod-install",
+
+    "ios": "react-native run-ios",
+    "eas-ios": "eas build --platform ios",
+
+    "clean-android": "cd android && ./gradlew clean",
     "eas-android": "eas build --platform android",
-    "eas-ios": "eas build --platform ios"
+    "android": "react-native run-android",
+    "android:version": "cd android && fastlane bump_version",
+    "android:build": "cd android && fastlane build_prod",
+    "android:publish:prod": "cd android && fastlane publish_prod",
+    "android:publish:beta": "cd android && fastlane publish_beta"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
